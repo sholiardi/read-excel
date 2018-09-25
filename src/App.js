@@ -5,6 +5,8 @@ import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import axios from 'axios';
 
+import SimpleTable from './SimpleTable';
+
 const styles = theme => ({
   textField: {
     marginLeft: theme.spacing.unit,
@@ -13,8 +15,17 @@ const styles = theme => ({
   },
 });
 
+let id = 0;
+function createData(name, calories, fat, carbs, protein) {
+  id += 1;
+  return { id, name, calories, fat, carbs, protein };
+}
+
 class TextFields extends React.Component {
-  state = {selectedFile: null}
+  state = {
+    selectedFile: null,
+    tableData: []
+  }
 
   fileChangedHandler = (event) => {
     this.setState({selectedFile: event.target.files[0]})
@@ -23,8 +34,17 @@ class TextFields extends React.Component {
   uploadHandler = () => {
     const formData = new FormData()
     formData.append('file', this.state.selectedFile, this.state.selectedFile.name)
-    axios.post('http://192.168.3.6:8080/upload', formData).then(data => {
-      console.log(data);
+    axios.post('http://192.168.3.6:8080/upload', formData).then(res => {
+
+      var array = res.data;
+      var data = [];
+
+      for (var i = 0; i < array.length; i++) {
+        data.push(createData(array[i][0], array[i][1], array[i][2], array[i][3], array[i][4]));
+      }
+
+      this.setState({ tableData: data});
+      
     })
   }
 
@@ -36,7 +56,7 @@ class TextFields extends React.Component {
         <TextField
           id="standard-name"
           name="upload"
-          label="Name"
+          label="File"
           className={classes.textField}
           onChange={this.fileChangedHandler}
           margin="normal"
@@ -45,6 +65,8 @@ class TextFields extends React.Component {
         <Button onClick={this.uploadHandler} variant="contained" color="primary" className={classes.button}>
           Upload
         </Button>
+
+        <SimpleTable data={this.state.tableData} />
       </div>
     );
   }
